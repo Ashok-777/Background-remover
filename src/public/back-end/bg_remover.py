@@ -1,65 +1,46 @@
-# ==============================
-# RELIABLE BG REMOVER (COLAB)
-# ==============================
-
-!pip install -q rembg pillow
-
-from google.colab import files
 from rembg import remove
 from PIL import Image
-import io, os
+import io, base64
 
-print("Upload an image (JPG / JPEG / PNG)")
+def handler(request):
+    """
+    Vercel serverless function to remove image background.
+    Expects a POST request with a file field named "image".
+    Returns a base64 PNG image.
+    """
 
-# Upload image
-uploaded = files.upload()
-image_path = list(uploaded.keys())[0]
+    # 1️⃣ Only allow POST
+    if request.method != "POST":
+        return {
+            "statusCode": 405,
+            "body": "Method Not Allowed. Use POST."
+        }
 
-# Load image safely
-original_img = Image.open(image_path).convert("RGBA")
-print("Original Image:")
-display(original_img)
+    # 2️⃣ Check if file exists in the request
+    if "image" not in request.files:
+        return {
+            "statusCode": 400,
+            "body": "No image file provided."
+        }
 
-print("Removing background... Please wait.")
+    # 3️⃣ Read the uploaded image
+    file = request.files["image"]
+    input_bytes = file.read()
 
-# Convert image to bytes (correct way)
-input_buffer = io.BytesIO()
-original_img.save(input_buffer, format="PNG")
-input_bytes = input_buffer.getvalue()
+    try:
+        # 4️⃣ Remove background
+        output_bytes = remove(input_bytes)
 
-# Remove background (high accuracy default model)
-output_bytes = remove(input_bytes)
+        # 5️⃣ Return as base64 for frontend
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "image/png"},
+            "body": base64.b64encode(output_bytes).decode("utf-8"),
+            "isBase64Encoded": True
+        }
 
-# Load result correctly
-result_img = Image.open(io.BytesIO(output_bytes)).convert("RGBA")
-print("Background Removed Preview:")
-display(result_img)
-
-# ----------------------------
-# SAVE TRANSPARENT PNG
-# ----------------------------
-png_path = "bg_removed.png"
-result_img.save(png_path, format="PNG")
-
-# ----------------------------
-# SAVE JPG (WHITE BACKGROUND)
-# ----------------------------
-white_bg = Image.new("RGB", result_img.size, (255, 255, 255))
-white_bg.paste(result_img, mask=result_img.getchannel("A"))
-
-jpg_path = "bg_removed.jpg"
-white_bg.save(jpg_path, format="JPEG", quality=95)
-
-# ----------------------------
-# VERIFY FILE INTEGRITY
-# ----------------------------
-print("File verification:")
-print("PNG size:", os.path.getsize(png_path), "bytes")
-print("JPG size:", os.path.getsize(jpg_path), "bytes")
-
-# ----------------------------
-# DOWNLOAD OPTIONS
-# ----------------------------
-print("Download background-removed image:")
-files.download(png_path)
-files.download(jpg_path)
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": f"Error removing background: {str(e)}"
+        }
