@@ -1,3 +1,6 @@
+# Install dependencies if not already installed
+!pip install -q rembg pillow onnxruntime
+
 from rembg import remove
 from PIL import Image
 import io, base64
