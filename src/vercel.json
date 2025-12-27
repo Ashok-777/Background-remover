@@ -1,8 +1,28 @@
 {
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "public/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ],
   "functions": {
-    "api/*.py": {
-      "runtime": "python3.9",
-      "memory": 1024,
+    "api/*.js": {
+      "runtime": "nodejs18.x",
       "maxDuration": 30
     }
   }
