@@ -1,36 +1,21 @@
-from rembg import remove
+from rembg import remove, new_session
 import base64
+
+session = new_session("u2net")  # preload model
 
 def handler(request):
     if request.method != "POST":
-        return {
-            "statusCode": 405,
-            "body": "Only POST allowed"
-        }
+        return {"statusCode": 405, "body": "Only POST allowed"}
 
     try:
-        # Vercel sends body as base64 string
+        # Ensure bytes are received correctly
         body = request.body
+        input_bytes = body if isinstance(body, bytes) else bytes(body, "utf-8")
 
-        if isinstance(body, str):
-            input_bytes = base64.b64decode(body)
-        else:
-            input_bytes = body
-
-        output_bytes = remove(input_bytes)
-
+        output_bytes = remove(input_bytes, session=session)
         encoded = base64.b64encode(output_bytes).decode("utf-8")
 
-        return {
-            "statusCode": 200,
-            "headers": {
-                "Content-Type": "text/plain"
-            },
-            "body": encoded
-        }
+        return {"statusCode": 200, "headers": {"Content-Type": "text/plain"}, "body": encoded}
 
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": str(e)
-        }
+        return {"statusCode": 500, "body": str(e)}
