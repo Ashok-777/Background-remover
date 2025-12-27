@@ -1,47 +1,35 @@
-// api/bg_remover.js
-import express from "express";
-import fileUpload from "express-fileupload";
 import { removeBackgroundFromImageBuffer } from "@rembg/rembg-node";
-import cors from "cors";
 
-const app = express();
+export const config = {
+  api: {
+    bodyParser: false
+  }
+};
 
-// Allow requests from frontend (if needed)
-app.use(cors());
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).send("Only POST requests allowed");
+  }
 
-// Enable file upload
-app.use(fileUpload({
-    createParentPath: true
-}));
-
-app.post("/", async (req, res) => {
-    try {
-        if (!req.files || !req.files.image) {
-            return res.status(400).send("No image uploaded");
-        }
-
-        const imageFile = req.files.image;
-        const inputBuffer = imageFile.data;
-
-        // Remove background
-        const outputBuffer = await removeBackgroundFromImageBuffer(inputBuffer);
-
-        // Convert to base64
-        const base64 = outputBuffer.toString("base64");
-
-        res.setHeader("Content-Type", "text/plain");
-        res.send(base64);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).send(err.toString());
+  try {
+    // Read raw request body (image bytes)
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
     }
-});
+    const inputBuffer = Buffer.concat(chunks);
 
-// Start server only if running locally
-if (process.env.NODE_ENV !== "production") {
-    const port = process.env.PORT || 3000;
-    app.listen(port, () => console.log(`Server running on port ${port}`));
+    // Remove background
+    const outputBuffer = await removeBackgroundFromImageBuffer(inputBuffer);
+
+    // Convert to base64
+    const base64 = outputBuffer.toString("base64");
+
+    res.setHeader("Content-Type", "text/plain");
+    res.status(200).send(base64);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Background removal failed");
+  }
 }
-
-export default app;
