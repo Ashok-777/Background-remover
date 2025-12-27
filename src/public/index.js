@@ -4,31 +4,27 @@ const resultImg = document.getElementById("resultImg");
 
 removeBtn.addEventListener("click", async () => {
     const file = fileInput.files[0];
-
-    if (!file) {
-        alert("Please select an image first!");
-        return;
-    }
+    if (!file) return alert("Please select an image first!");
 
     removeBtn.textContent = "Processing...";
     removeBtn.disabled = true;
 
     try {
-        // Send raw file bytes directly
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+
         const response = await fetch("/api/bg_remover", {
             method: "POST",
-            body: await file.arrayBuffer() // send as ArrayBuffer
+            body: uint8Array
         });
 
-        if (!response.ok) {
-            throw new Error(`Failed to remove background. Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Status: ${response.status}`);
 
-        const base64 = await response.text(); // Python returns plain base64 string
+        const base64 = await response.text();
         resultImg.src = "data:image/png;base64," + base64;
 
-    } catch (error) {
-        alert("Error: " + error.message);
+    } catch (err) {
+        alert("Error: " + err.message);
     } finally {
         removeBtn.textContent = "Remove Background";
         removeBtn.disabled = false;
