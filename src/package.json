@@ -1,0 +1,21 @@
+{
+  "name": "background-remover",
+  "version": "1.0.0",
+  "description": "Background remover using Node.js and @rembg/rembg-node",
+  "type": "module",
+  "main": "api/bg_remover.js",
+  "scripts": {
+    "start": "node api/bg_remover.js"
+  },
+  "dependencies": {
+    "@rembg/rembg-node": "^2.0.0",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
