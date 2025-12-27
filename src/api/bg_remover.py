@@ -9,13 +9,16 @@ def handler(request):
         }
 
     try:
-        # Read raw body (image bytes)
-        input_bytes = request.body
+        # Vercel sends body as base64 string
+        body = request.body
 
-        # Remove background
+        if isinstance(body, str):
+            input_bytes = base64.b64decode(body)
+        else:
+            input_bytes = body
+
         output_bytes = remove(input_bytes)
 
-        # Encode as base64
         encoded = base64.b64encode(output_bytes).decode("utf-8")
 
         return {
