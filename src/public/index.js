@@ -10,12 +10,13 @@ removeBtn.addEventListener("click", async () => {
     removeBtn.disabled = true;
 
     try {
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+        // Use FormData to send image to Node.js backend
+        const formData = new FormData();
+        formData.append("image", file);
 
         const response = await fetch("/api/bg_remover", {
             method: "POST",
-            body: uint8Array
+            body: formData
         });
 
         if (!response.ok) throw new Error(`Status: ${response.status}`);
