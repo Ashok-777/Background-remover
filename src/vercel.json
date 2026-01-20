@@ -1,19 +1,27 @@
 {
   "version": 2,
   "functions": {
-    "api/*.js": {
-      "runtime": "nodejs18.x",
-      "maxDuration": 30
+    "src/api/bg_remove.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "routes": [
     {
-      "src": "/",
-      "dest": "/public/index.html"
+      "src": "/api/bg_remove",
+      "dest": "/src/api/bg_remove.js"
+    },
+    {
+      "src": "/index.js",
+      "dest": "/src/public/index.js"
+    },
+    {
+      "src": "/css/style.css",
+      "dest": "/src/public/style.css"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/src/public/index.html"
     }
   ]
 }
