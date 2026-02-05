@@ -8,28 +8,26 @@ export const config = {
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).send("Only POST requests allowed");
+    return res.status(405).json({ error: "Only POST requests allowed" });
   }
 
   try {
-    // Read raw request body (image bytes)
     const chunks = [];
     for await (const chunk of req) {
       chunks.push(chunk);
     }
+
     const inputBuffer = Buffer.concat(chunks);
 
-    // Remove background
+    if (!inputBuffer.length) {
+      return res.status(400).json({ error: "No image data received" });
+    }
+
     const outputBuffer = await removeBackgroundFromImageBuffer(inputBuffer);
 
-    // Convert to base64
-    const base64 = outputBuffer.toString("base64");
-
-    res.setHeader("Content-Type", "text/plain");
-    res.status(200).send(base64);
-
+    res.setHeader("Content-Type", "image/png");
+    res.status(200).send(outputBuffer);
   } catch (error) {
-    console.error(error);
-    res.status(500).send("Background removal failed");
+    res.status(500).json({ error: "Background removal failed" });
   }
 }
